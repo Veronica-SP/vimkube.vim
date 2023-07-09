@@ -1,0 +1,272 @@
+*vimkube.txt* 	                     Plugin for integrating Kubernetes with Vim
+
+==============================================================================
+CONTENTS                                                       *vimkube-contents*
+
+    Usage.....................................: |vimkube-usage|
+    Requirements..............................: |vimkube-requirements|
+    Configuration.............................: |vimkube-configuration|
+
+==============================================================================
+USAGE                                                             *vimkube-usage*
+
+Kubectl integration~                                            *vimkube-kubectl*
+
+Vimkube allows for execution of kubectl commands directly from Vim and adds some 
+enhancements on top that make for a smoother integration and k8s development 
+using Vim.
+
+:VkApply [{namespace}]                                                 *:VkApply*
+
+Applies the contents of the current buffer as a k8s resource in {namespace}.
+If terminal mode is supported, launches a terminal with the command 'kubectl get 
+-w' for the applied resource which watches the changes in its state. The terminal
+closes automatically after the process exits which can be done with <c-c>. If
+{namespace} is not specified it defaults to the current one.
+
+:VkEdit {type} {name} [{namespace}]                                     *:VkEdit*
+
+Creates a scratch buffer with the YAML specification of the resource of {type} 
+with {name} located in {namespace} and allows to modify it. This command can be
+used in conjunction with |:VkApply| in order to update a k8s resource. If {namespace}
+is not specified it defaults to the current one.
+
+:VkDelete [{type}] [{name}] [{namespace}]                              *:VkDelete*
+
+Deletes the resource of {type} with {name} in {namespace}. If {type} and {name} 
+are not specified, uses the resource definition in the current buffer. If 
+{namespace} is not specified it defaults to the current one.
+
+:VkDescribe {type} {name} [{namespace}]                              *:VkDescribe*
+
+Creates a scratch buffer with the output of 'kubectl describe' command for the 
+resource of {type} with {name} located in {namespace}. If {namespace} is not 
+specified it defaults to the current one.
+
+:VkGet {type} [{namespace}]                                               *:VkGet*
+
+Creates a scratch buffer containing information for all available resources of 
+{type} located in {namespace}. If {namespace} is not specified it defaults to 
+the current one.
+
+:VkLogs {name} [{namespace}]                                             *:VkLogs*
+
+If terminal mode is supported, launches a terminal with a stream of the logs of
+pod with {name}. The terminal closes automatically after the process exits which
+can be done with <c-c>. If {namespace} is not specified it defaults to the
+current one.
+
+:VkExec {name} [{namespace}]                                             *:VkExec*
+
+If terminal mode is supported, launches a terminal with an active shell inside
+the running container of a pod with {name}. The terminal closes automatically
+after the process exits which can be done with <c-c>. If {namespace} is not 
+specified it defaults to the current one.
+
+:VkNamespace [{namespace}]                                          *:VkNamespace*
+
+If {namespace} is specified, changes the kubectl configuration to use it as the
+default one, otherwise shows the current namespace.
+
+:VkResourceInfo                                                  *:VkResourceInfo*
+
+Creates a scratch buffer with the kubectl documentation for the resource type
+which is in the current buffer.
+
+Working with templates~                                        *vimkube-templates*
+
+Vimkube allows to use predefined templates for creating k8s resources as well
+as modifying the default ones and adding new ones. The plugin automatically 
+searches inside the templates directory. Each template has the following path - 
+'<apiVersion>/<resourceName>/<templateName>'. For default k8s resources 
+'<apiVersion>' is automatically prefixed with 'k8s.io'. You can change the
+default templates directory by modifying the |g:vimkube_templates_dir| variable.
+
+:VkSaveTemplate [{templateName}]                                 *:VkSaveTemplate*
+
+Saves the contents of the current buffer as a template that can be used in the 
+future as a baseline for creating k8s resources. The file location is assembled
+from the resource's 'apiVersion' and 'kind' and is named '{templateName}.yml' if 
+provided or 'default.yml' otherwise. If a template for that resource with that
+name exists an appropriate message is displayed. The default save location is
+the plugin's templates directory and can be changed by setting
+|g:vimkube_templates_dir|.
+
+Example:
+
+For the following template:
+>
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: someSecret
+    data:
+      someKey: someValue
+<
+executing
+>
+    :VkSaveTemplate
+<
+will create the template
+>
+    .../templates/k8s.io/v1/secret/default.yml
+<
+if there is not a template with that name already.
+
+Executing
+>
+    :VkSaveTemplate mySecret
+<
+will create the template
+>
+    .../templates/k8s.io/v1/secret/mySecret.yml
+<
+if there is not a template with that name already.
+
+:VkEditTemplate {template}                                       *:VkEditTemplate*
+
+Opens the {template} (if it exists) in a new buffer and can be used to directly
+modify it. Note that you need to manually save the changes with :w afterwards. 
+{template} should be in the format '<resourceType>{/<templateName>}'. Full
+resource types as well as shortnames are supported. If <templateName> is not
+part of the name, 'default' is used. The default search location is the plugin's
+templates directory and can be changed by setting |g:vimkube_templates_dir|.
+The search is performed recursively.
+
+Example:
+
+Executing
+>
+    :VkEditTemplate secret
+<
+will open the template
+>
+    .../templates/k8s.io/v1/secret/default.yml
+<
+if it exists.
+
+Executing
+>
+    :VkEditTemplate secret/mySecret
+<
+will open the template
+>
+    .../templates/k8s.io/v1/secret/mySecret.yml
+<
+if it exists.
+
+:VkDeleteTemplate {template}                                   *:VkDeleteTemplate*
+
+Deletes the {template} (if it exists) from the templates directory. {template}
+should be in the format '<resourceType>{/<templateName>}'. Full resource types as
+well as shortnames are supported. If <templateName> is not part of the name
+'default' is used. If the directory for that resource becomes empty after the
+deletion, it gets deleted as well. The default search location is the plugin's
+templates directory and can be changed by setting |g:vimkube_templates_dir|. 
+The search is performed recursively.
+
+Example:
+
+Executing
+>
+    :VkDeleteTemplate secret
+<
+will delete the template
+>
+    .../templates/k8s.io/v1/secret/default.yml
+<
+if it exists.
+
+Executing
+>
+    :VkDeleteTemplate secret/mySecret
+<
+will delete the template
+>
+    .../templates/k8s.io/v1/secret/mySecret.yml
+<
+if it exists.
+
+                                                        *:vimkube-expand-template*
+
+In order to use a saved template as baseline for creating k8s resource 
+specifications you can use the mapping defined by |g:vimkube_expand_mapping|.
+The usage flow is the following:
+
+- Go into insert mode
+- Type the name of the resource in the format '<resourceType>{/<templateName>}'.
+  If <templateName> is not specified, 'default' is used
+- Use the expand mapping which automatically exits out of insert mode
+
+The text under the cursor in insert mode is used for searching for a template
+with the specified name. If such a template is found the contents of the file
+get copied to the current buffer. The default search location is the plugin's
+templates directory and can be changed by setting |g:vimkube_templates_dir|. 
+The search is performed recursively.
+
+                                                          *:vimkube-encode-secret*
+                                                          *:vimkube-decode-secret*
+
+The plugin provides the ability to encode and decode the values in a k8s secret
+resource which are defined under the 'data' section. This is done using the 
+mappings defined by |g:vimkube_encode_mapping| and |g:vimkube_decode_mapping|
+and can be applied only to secrets. It is a neat functionality which removes the
+need to manually encode and decode the values one by one each time.
+
+==============================================================================
+REQUIREMENTS                                                *vimkube-requirements*
+
+In order to use the plugin you need to have kubectl installed and set in the 
+PATH environment variable and have an established connection to a k8s cluster.
+
+==============================================================================
+CONFIGURATION                                              *vimkube-configuration*
+
+These are the variables that control the behaviour of the plugin.
+
+                                                        *g:vimkube_expand_mapping*
+>
+    let g:vimkube_expand_mapping = '<Tab>'
+<
+
+Default value: <Tab>
+
+The value of this global variable determines which mapping will be used by the
+plugin in order to expand a template with a name corresponding to the text under
+the cursor when in insert mode.
+
+                                                        *g:vimkube_encode_mapping*
+>
+    let g:vimkube_encode_mapping = '<c-e>'
+<
+
+Default value: <c-e>
+
+The value of this global variable determines which mapping will be used by the
+plugin in order to encode the values under the 'data' section in a k8s secret
+resource.
+
+                                                        *g:vimkube_decode_mapping*
+>
+    let g:vimkube_decode_mapping = '<c-d>'
+<
+
+Default value: <c-d>
+
+The value of this global variable determines which mapping will be used by the
+plugin in order to decode the values under the 'data' section in a k8s secret
+resource.
+
+                                                         *g:vimkube_templates_dir*
+>
+    let g:vimkube_templates_dir = '/path/to/templates/dir'
+<
+
+Default value: The plugin's templates directory
+
+The value of this global variable determines the directory which will be
+recursively searched when working with k8s resource templates. You can set 
+this variable if you wish to use a custom templates directory.
+
+
+vim:tw=78:sw=4:ft=help:norl:

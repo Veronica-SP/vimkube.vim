@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: <value>
+  labels:
+    app: <value>
+spec:
+  replicas: <value>
+  selector:
+    matchLabels:
+      app: <value>
+  template:
+    metadata:
+      labels:
+        app: <value>
+    spec:
+      containers:
+      - name: <value>
+        image: <value>
+        volumeMounts:
+        - mountPath: <value>
+          name: <value>
+          readOnly: <value>
+        ports:
+        - containerPort: <value>
+      imagePullSecrets:
+      - name: <value>
+      volumes:
+      - name: <value>
+        secret:
+          secretName: <value>

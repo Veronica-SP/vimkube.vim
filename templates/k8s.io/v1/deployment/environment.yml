@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: <value>
+  labels:
+    app: <value>
+spec:
+  replicas: <value>
+  selector:
+    matchLabels:
+      app: <value>
+  template:
+    metadata:
+      labels:
+        app: <value>
+    spec:
+      containers:
+      - name: <value>
+        image: <value>
+        ports:
+        - containerPort: <value>
+        # Define a Pod environment variable with data from a single ConfigMap
+        env:
+        - name: <value>
+          valueFrom:
+            configMapKeyRef:
+              name: <value>
+              key: <value>
+        # Configure all key-value pairs in a ConfigMap as Pod environment variables
+        envFrom:
+        - configMapRef:
+            name: <value>
+      imagePullSecrets:
+      - name: <value>
