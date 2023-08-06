@@ -76,7 +76,7 @@ function! vimkube#templates#EncodeDecodeSecret(encode) abort
   for line in range(dataLine + 1, line("$"))
     let content = getline(line)
     if content !~ '  \S\+:\s*\S\+'
-      continue
+      return
     endif
 
     let tokens = split(content, ":")
