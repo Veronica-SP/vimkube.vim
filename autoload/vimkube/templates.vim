@@ -75,7 +75,7 @@ function! vimkube#templates#EncodeDecodeSecret(encode) abort
   let dataLine = search("^\s*data:\s*$", "n")
   for line in range(dataLine + 1, line("$"))
     let content = getline(line)
-    if content !~ '  \S\+:\s*\S\+'
+    if content !~ '  \S\+:'
       return
     endif
 
