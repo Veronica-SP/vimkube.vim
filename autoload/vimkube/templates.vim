@@ -79,15 +79,16 @@ function! vimkube#templates#EncodeDecodeSecret(encode) abort
       return
     endif
 
-    let tokens = split(content, ":")
-    let value = trim(tokens[1])
+    let splitIndex = stridx(content, ":")
+    let key = strpart(content, 0, splitIndex)
+    let value = trim(strpart(content, splitIndex + 1))
     if a:encode == 1
       let result = system("base64 | tr -d '\n'", value)
     else
       let result = system("base64 -d | tr -d '\n'", value)
     endif
 
-    call setline(line, tokens[0] . ": " . result) 
+    call setline(line, key . ": " . result) 
   endfor 
 endfunction
 
