@@ -97,7 +97,7 @@ Vimkube allows the use of predefined templates for creating k8s resources as wel
 
     - Go into insert mode
     - Type the name of the resource in the format '\<resourceType\>{/\<templateName\>}'. If \<templateName\> is not specified, 'default' is used
-    - Use the expand mapping which automatically exits out of insert mode<br></br>
+    - Use the expand mapping which automatically exits out of insert mode
 
 - Encode/decode the values in a k8s secret resource defined under the 'data' section. 
 
